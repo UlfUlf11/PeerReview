@@ -64,70 +64,69 @@ public:
             //...иначе...
             else
             {
-                //...из общего кол-ва пользователей вычитаем тех, кто дочитал до этой же страницы, 
+                //...из общего кол-ва пользователей вычитаем тех, кто дочитал до этой же страницы,
                 //и делим на всех других пользователей, кроме нашего
                 return (amount_of_users_ - users_count_for_page[page_number - 1]) / (amount_of_users_ * 1.0 - 1.0);
             }
         }
     }
 
+    void Output(std::ostream& output)
+    {
+        std::string command;
+
+        for (const std::string request : requests_)
+        {
+            std::istringstream ss(request);
+            ss >> command;
+            if (command == "READ")
+            {
+                int user_id;
+                int page;
+                ss >> user_id >> page;
+                Read(user_id, page);
+            }
+            else if (command == "CHEER")
+            {
+                int user_id;
+                ss >> user_id;
+                output << Cheer(user_id) << std::endl;
+            }
+        }
+    }
+
+    void Input(std::istream& input)
+    {
+        std::string str;
+        getline(input, str);
+
+        int requests_amount = std::stoi(str);
+        std::vector<std::string> requests;
+        requests_.reserve(requests_amount);
+
+        for (int i = 0; i < requests_amount; ++i)
+        {
+            std::string request;
+            getline(input, request);
+            requests_.push_back(request);
+        }
+    }
+
 private:
     //кол-во людей, дочитавших как минимум до страницы №...
-    std::vector<int> users_count_for_page;
+    std::vector<std::uint32_t> users_count_for_page;
     //до какой страницы дочитал пользователь с id...
-    std::vector<int> pages_to_user_id_;
+    std::vector<std::int16_t> pages_to_user_id_;
     //счетчик кол-ва читателей
-    int amount_of_users_ = 0;
+    std::uint32_t amount_of_users_ = 0;
+    //вектор запросов, вызывается командой Output
+    std::vector<std::string> requests_;
 };
-
-
-void PrintResults(std::ostream& output, ReadingManager& manager, const std::vector<std::string>& requests)
-{
-    std::string command;
-
-    for (const std::string request : requests)
-    {
-        std::istringstream ss(request);
-        ss >> command;
-        if (command == "READ")
-        {
-            int user_id;
-            int page;
-            ss >> user_id >> page;
-            manager.Read(user_id, page);
-        }
-        else if (command == "CHEER")
-        {
-            int user_id;
-            ss >> user_id;
-            output << manager.Cheer(user_id) << std::endl;
-        }
-    }
-}
-
-
-void RequestHandler(std::istream& input, std::ostream& output, ReadingManager& manager)
-{
-    std::string str;
-    getline(input, str);
-
-    int requests_amount = std::stoi(str);
-    std::vector<std::string> requests;
-    requests.reserve(requests_amount);
-
-    for (int i = 0; i < requests_amount; ++i)
-    {
-        std::string request;
-        getline(input, request);
-        requests.push_back(request);
-    }
-
-    PrintResults(output, manager, requests);
-}
 
 
 int main()
 {
     ReadingManager manager;
-    RequestHandler(std::cin, std::cout, manager);
+    manager.Input(std::cin);
+    manager.Output(std::cout);
 }
